@@ -29,7 +29,7 @@ local LoadGame = {
 	parentNum = 1,
 	content = "Load Game",
 	onClick = "lua.Run(\"RunGameUICommand(\'OpenLoadGameDialog\')\")",
-	attributes = {{"href", "#/"}}
+	attributes = {}
 }
 
 local SaveGame = {
@@ -39,7 +39,7 @@ local SaveGame = {
 	parentNum = 1,
 	content = "Save Game",
 	onClick = "lua.Run(\"RunGameUICommand(\'OpenSaveGameDialog\')\")",
-	attributes = {{"href", "#/"}}
+	attributes = {}
 }
 
 menumods.AddElement("HL2SaveMenu_LoadGameButtonContainer", LoadGameContainer)
