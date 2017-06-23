@@ -1,6 +1,6 @@
 # Half-Life 2 Save Menu
 
-This is the Menu-Mods-compatible (legacy) version of the Half-Life 2 Save Menu addon for Garry's Mod. With this specific version, the options "Load Game", and "Save Game" ("Save Game" appears only when in-game.) will appear on the main/pause menu screen in addition to all other features. You can find Menu Mods in [this](https://github.com/GModModGod/Menu-Mods "Menu Mods Repository") repository.
+This is the Half-Life 2 Save Menu addon for Garry's Mod. The options "Load Game", and "Save Game" ("Save Game" appears only when in-game.) will appear on the main/pause menu screen in addition to all other features mentioned below. You can find Menu Mods in [this](https://github.com/GModModGod/Menu-Mods "Menu Mods Repository") repository.
 
 
 Installation Instructions:
