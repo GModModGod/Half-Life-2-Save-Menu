@@ -3,6 +3,9 @@
 This is the Menu-Mods-compatible (legacy) version of the Half-Life 2 Save Menu addon for Garry's Mod. With this specific version, the options "Load Game", and "Save Game" ("Save Game" appears only when in-game.) will appear on the main/pause menu screen in addition to all other features. You can find Menu Mods in [this](https://github.com/GModModGod/Menu-Mods "Menu Mods Repository") repository.
 
 
+Installation Instructions:
+Once downloaded, place the folder named "half-life_2_save_menu" inside the "addons" folder in your "garrysmod" directory (usually "C:/Program Files (x86)/Steam/steamapps/common/GarrysMod/garrysmod").
+
 
 Original Description:
 
