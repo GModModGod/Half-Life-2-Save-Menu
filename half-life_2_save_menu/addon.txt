@@ -1,0 +1,6 @@
+"AddonInfo"
+{
+	"name" "Half-Life 2 Save Menu"
+	"author_name" "BeltedRose85463"
+	"info" " { 	"description": "Save your games the old way with Source Engine's built-in save system.", 	"type": "tools", 	"tags":  	[] }"
+}
