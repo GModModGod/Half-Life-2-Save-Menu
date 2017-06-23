@@ -14,7 +14,7 @@ The settings for this addon are also located under Options -> Half-Life 2 Save M
 
 If you have any old GMod saves from Garry's Mod 12 (or possibly earlier), you can reload them as well.
 
-If you would like to fix level transitions as well, you could download the "Level Transition Fix" addon (found here), or the "Basic Campaign" addon (found here).
+If you would like to fix level transitions as well, you could download the "Level Transition Fix" addon (found [here](http://steamcommunity.com/sharedfiles/filedetails/?id=945424916 "\"Level Transition Fix\" Addon")), or the "Basic Campaign" addon (found [here](http://steamcommunity.com/sharedfiles/filedetails/?id=945423705 "\"Basic Campaign\" Addon")).
 
 
 
