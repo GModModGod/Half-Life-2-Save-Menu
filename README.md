@@ -1,6 +1,6 @@
 # Half-Life 2 Save Menu
 
-This is the Menu Mods-compatible version of the Half-Life 2 Save Menu addon for Garry's Mod.
+This is the Menu-Mods-compatible version of the Half-Life 2 Save Menu addon for Garry's Mod. With this specific version, the options "Load Game", and "Save Game" ("Save Game" appears only when in-game.) will appear on the main/pause menu screen in addition to all other features.
 
 This addon enables anyone to access the old Source Engine save and load menus via Options -> Half-Life 2 Save Menu -> Save and Load.
 
