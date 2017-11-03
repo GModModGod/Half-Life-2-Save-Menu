@@ -272,6 +272,47 @@ function HL2SaveSys.string.ReadValues(str, numVals)
 	return vals, str
 end
 
+local HL2SaveSys_SetNWVarFuncs = {
+	["angle"] = function(ent, key, value)
+		ent:SetNWAngle(key, value)
+	end,
+	["boolean"] = function(ent, key, value)
+		ent:SetNWBool(key, value)
+	end,
+	["entity"] = function(ent, key, value)
+		ent:SetNWEntity(key, value)
+	end,
+	["player"] = function(ent, key, value)
+		ent:SetNWEntity(key, value)
+	end,
+	["float"] = function(ent, key, value)
+		ent:SetNWFloat(key, value)
+	end,
+	["int"] = function(ent, key, value)
+		ent:SetNWInt(key, value)
+	end,
+	["string"] = function(ent, key, value)
+		ent:SetNWString(key, value)
+	end,
+	["vector"] = function(ent, key, value)
+		ent:SetNWVector(key, value)
+	end
+}
+
+function HL2SaveSys.SetNWVar(ent, key, value)
+	local valType = string.lower(type(value))
+	
+	if (not HL2SaveSys_SetNWVarFuncs[valType]) then
+		local errInfo = debug.getinfo(0, "S")
+		
+		error("[ERROR] " .. errInfo.short_src .. ": Attempted to set a networked variable of an invalid type on an entity.")
+		
+		return
+	end
+	
+	HL2SaveSys_SetNWVarFuncs[valType](ent, key, value)
+end
+
 local HL2SaveSys_WriteTypeFuncs = {
 	["angle"] = function(str, val)
 		str = HL2SaveSys.string.AppendValues(str, val.p, val.y, val.r)
@@ -317,25 +358,6 @@ local HL2SaveSys_WriteTypeFuncs = {
 		
 		return str
 	end,
-	["player"] = function(str, val)
-		if (not (val:IsValid() or val:IsWorld())) then
-			str = HL2SaveSys.string.AppendValues(str, false, -1)
-			
-			return str
-		end
-		
-		if (not val:IsPlayer()) then
-			str = HL2SaveSys.string.AppendValues(str, false, val:MapCreationID())
-		else
-			if HL2SaveSys_Players[val] then
-				str = HL2SaveSys.string.AppendValues(str, true, HL2SaveSys_Players[val])
-			else
-				str = HL2SaveSys.string.AppendValues(str, true, -1)
-			end
-		end
-		
-		return str
-	end,
 	["string"] = function(str, val)
 		str = HL2SaveSys.string.AppendValues(str, HL2SaveSys.string.LevelPush(tostring(val), 1, false))
 		
@@ -348,46 +370,9 @@ local HL2SaveSys_WriteTypeFuncs = {
 	end
 }
 
-local HL2SaveSys_SetNWVarFuncs = {
-	["angle"] = function(ent, key, value)
-		ent:SetNWAngle(key, value)
-	end,
-	["boolean"] = function(ent, key, value)
-		ent:SetNWBool(key, value)
-	end,
-	["entity"] = function(ent, key, value)
-		ent:SetNWEntity(key, value)
-	end,
-	["player"] = function(ent, key, value)
-		ent:SetNWEntity(key, value)
-	end,
-	["float"] = function(ent, key, value)
-		ent:SetNWFloat(key, value)
-	end,
-	["int"] = function(ent, key, value)
-		ent:SetNWInt(key, value)
-	end,
-	["string"] = function(ent, key, value)
-		ent:SetNWString(key, value)
-	end,
-	["vector"] = function(ent, key, value)
-		ent:SetNWVector(key, value)
-	end
-}
-
-function HL2SaveSys.SetNWVar(ent, key, value)
-	local valType = string.lower(type(value))
-	
-	if (not HL2SaveSys_SetNWVarFuncs[valType]) then
-		local errInfo = debug.getinfo(0, "S")
-		
-		error("[ERROR] " .. errInfo.short_src .. ": Attempted to set a networked variable of an invalid type on an entity.")
-		
-		return
-	end
-	
-	HL2SaveSys_SetNWVarFuncs[valType](ent, key, value)
-end
+HL2SaveSys_WriteTypeFuncs["player"] = HL2SaveSys_WriteTypeFuncs["entity"]
+HL2SaveSys_WriteTypeFuncs["nextbot"] = HL2SaveSys_WriteTypeFuncs["entity"]
+HL2SaveSys_WriteTypeFuncs["npc"] = HL2SaveSys_WriteTypeFuncs["entity"]
 
 HL2SaveSys.string.WriteAngle = HL2SaveSys_WriteTypeFuncs["angle"]
 HL2SaveSys.string.WriteBool = HL2SaveSys_WriteTypeFuncs["boolean"]
@@ -471,6 +456,10 @@ local HL2SaveSys_ReadTypeFuncs = {
 		return Vector(vals[1], vals[2], vals[3]), str
 	end
 }
+
+HL2SaveSys_ReadTypeFuncs["player"] = HL2SaveSys_ReadTypeFuncs["entity"]
+HL2SaveSys_ReadTypeFuncs["nextbot"] = HL2SaveSys_ReadTypeFuncs["entity"]
+HL2SaveSys_ReadTypeFuncs["npc"] = HL2SaveSys_ReadTypeFuncs["entity"]
 
 HL2SaveSys.string.ReadAngle = HL2SaveSys_ReadTypeFuncs["angle"]
 HL2SaveSys.string.ReadBool = HL2SaveSys_ReadTypeFuncs["boolean"]
@@ -1774,6 +1763,7 @@ saverestore.AddSaveHook("HL2SaveSys_Save", SaveGame)
 saverestore.AddRestoreHook("HL2SaveSys_Save", RestoreGame)
 
 hook.Add("InitPostEntity", "HL2SaveSys_InitPostEntity", InitPostEntity)
+hook.Add("PlayerInitialSpawn", "HL2SaveSys_PlayerInitialSpawn", PlayerInitialSpawn)
 hook.Add("PlayerPostThink", "HL2SaveSys_PlayerPostThink", PlayerPostThink)
 hook.Add("Think", "HL2SaveSys_Think", Think)
 hook.Add("PlayerTick", "HL2SaveSys_PlayerTick", PlayerTick)
