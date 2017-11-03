@@ -645,7 +645,7 @@ HL2SaveSys.string.ReadTable = function(str, excludedTabs, tree)
 		
 		table.insert(tree, (#tree + 1), k)
 		
-		local newVal, newStr = HL2SaveSys.ReadTable(str, excludedTabs, tree)
+		local newVal, newStr = HL2SaveSys.string.ReadTable(str, excludedTabs, tree)
 		str = newStr
 		newTab[k] = newVal
 		
