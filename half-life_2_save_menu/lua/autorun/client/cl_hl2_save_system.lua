@@ -1,5 +1,8 @@
 
 local function OpenSaveDialog()
+	RunConsoleCommand("-menu")
+	RunConsoleCommand("-menu_context")
+	
 	if (not gui.IsGameUIVisible()) then
 		gui.ActivateGameUI()
 	end
@@ -8,6 +11,9 @@ local function OpenSaveDialog()
 end
 
 local function OpenLoadDialog()
+	RunConsoleCommand("-menu")
+	RunConsoleCommand("-menu_context")
+	
 	if (not gui.IsGameUIVisible()) then
 		gui.ActivateGameUI()
 	end
@@ -29,6 +35,9 @@ function HL2SaveSys_Options(panel)
 	
 	panel:Help("Override Player Spawning enables the restoration of players' data as mentioned in the above description.")
 	panel:CheckBox("Override Player Spawning", "HL2SaveSys_overrideSpawning")
+	
+	panel:Help("Save Lua Tables enables the saving of all entities\' Lua tables to be restored on loading, which helps fix sound bugs that occur when loading from certain places in a map. This can be very slow when there is a large number of scripted entities in the map. It is recommended to use this feature only when playing campaigns.")
+	panel:CheckBox("Save Lua Tables", "HL2SaveSys_saveLuaTables")
 end
 
 function HL2SaveSys_SaveAndLoad_Menu()
