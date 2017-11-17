@@ -152,7 +152,7 @@ function HL2SaveSys.string.LevelPush(str, numLevels, noOuterQuotes)
 		newString = string.Replace(newString, "\\", "\\\\")
 		
 		for k, v in pairs(escChars) do
-			newString = string.Replace(newString, v[1], ("\\" .. v[2]))
+			newString = string.gsub(newString, string.PatternSafe(v[1]), ("\\" .. string.PatternSafe(v[2])))
 		end
 		
 		if (not noOuterQuotes) then
@@ -174,7 +174,7 @@ function HL2SaveSys.string.LevelPop(str, numLevels)
 	
 	for i = 1, numLevels_new do
 		for k, v in pairs(escChars) do
-			newString = string.gsub(newString, "^[\"\']", "")
+			newString = string.gsub(newString, ("^" .. string.PatternSafe(v[1])), "")
 			newString = string.gsub(newString, ("([^\\])" .. string.PatternSafe(v[1])), "%1")
 			newString = string.Replace(newString, ("\\" .. v[2]), v[1])
 		end
@@ -188,26 +188,34 @@ end
 local HL2SaveSys_ValidTypes_Old = {
 	["angle"] = true,
 	["boolean"] = true,
+	["color"] = true,
 	["entity"] = true,
+	["nextbot"] = true,
 	["nil"] = true,
 	["no value"] = true,
+	["npc"] = true,
 	["number"] = true,
 	["player"] = true,
 	["string"] = true,
-	["vector"] = true
+	["vector"] = true,
+	["weapon"] = true
 }
 
 local HL2SaveSys_ValidTypes = {
 	["angle"] = true,
 	["boolean"] = true,
+	["color"] = true,
 	["entity"] = true,
+	["nextbot"] = true,
 	["nil"] = true,
 	["no value"] = true,
+	["npc"] = true,
 	["number"] = true,
 	["player"] = true,
 	["string"] = true,
 	["table"] = true,
-	["vector"] = true
+	["vector"] = true,
+	["weapon"] = true
 }
 
 function HL2SaveSys.string.AppendValues(str, ...)
@@ -282,20 +290,23 @@ local HL2SaveSys_SetNWVarFuncs = {
 	["entity"] = function(ent, key, value)
 		ent:SetNWEntity(key, value)
 	end,
-	["player"] = function(ent, key, value)
-		ent:SetNWEntity(key, value)
-	end,
 	["float"] = function(ent, key, value)
 		ent:SetNWFloat(key, value)
 	end,
 	["int"] = function(ent, key, value)
 		ent:SetNWInt(key, value)
 	end,
+	["player"] = function(ent, key, value)
+		ent:SetNWEntity(key, value)
+	end,
 	["string"] = function(ent, key, value)
 		ent:SetNWString(key, value)
 	end,
 	["vector"] = function(ent, key, value)
 		ent:SetNWVector(key, value)
+	end,
+	["weapon"] = function(ent, key, value)
+		ent:SetNWEntity(key, value)
 	end
 }
 
@@ -305,7 +316,7 @@ function HL2SaveSys.SetNWVar(ent, key, value)
 	if (not HL2SaveSys_SetNWVarFuncs[valType]) then
 		local errInfo = debug.getinfo(0, "S")
 		
-		error("[ERROR] " .. errInfo.short_src .. ": Attempted to set a networked variable of an invalid type on an entity.")
+		error("[ERROR] " .. errInfo.short_src .. ": Attempted to set a networked variable of invalid type \"" .. valType .. "\" on an entity.")
 		
 		return
 	end
@@ -321,6 +332,11 @@ local HL2SaveSys_WriteTypeFuncs = {
 	end,
 	["boolean"] = function(str, val)
 		str = HL2SaveSys.string.AppendValues(str, val)
+		
+		return str
+	end,
+	["color"] = function(str, val)
+		str = HL2SaveSys.string.AppendValues(str, val.r, val.g, val.b, val.a)
 		
 		return str
 	end,
@@ -373,6 +389,7 @@ local HL2SaveSys_WriteTypeFuncs = {
 HL2SaveSys_WriteTypeFuncs["player"] = HL2SaveSys_WriteTypeFuncs["entity"]
 HL2SaveSys_WriteTypeFuncs["nextbot"] = HL2SaveSys_WriteTypeFuncs["entity"]
 HL2SaveSys_WriteTypeFuncs["npc"] = HL2SaveSys_WriteTypeFuncs["entity"]
+HL2SaveSys_WriteTypeFuncs["weapon"] = HL2SaveSys_WriteTypeFuncs["entity"]
 
 HL2SaveSys.string.WriteAngle = HL2SaveSys_WriteTypeFuncs["angle"]
 HL2SaveSys.string.WriteBool = HL2SaveSys_WriteTypeFuncs["boolean"]
@@ -385,12 +402,17 @@ local HL2SaveSys_ReadTypeFuncs = {
 	["angle"] = function(str)
 		local vals, str = HL2SaveSys.string.ReadValues(str, 3)
 		
-		return Angle(vals[1], vals[2], vals[3]), str
+		return Angle(tonumber(vals[1]), tonumber(vals[2]), tonumber(vals[3])), str
 	end,
 	["boolean"] = function(str)
 		local vals, str = HL2SaveSys.string.ReadValues(str, 1)
 		
 		return tobool(vals[1]), str
+	end,
+	["color"] = function(str)
+		local vals, str = HL2SaveSys.string.ReadValues(str, 4)
+		
+		return Color(tonumber(vals[1]), tonumber(vals[2]), tonumber(vals[3]), tonumber(vals[4])), str
 	end,
 	["entity"] = function(str)
 		local vals, str = HL2SaveSys.string.ReadValues(str, 2)
@@ -399,10 +421,16 @@ local HL2SaveSys_ReadTypeFuncs = {
 		
 		local ent
 		
-		if (not vals[1]) then
-			ent = ents.GetMapCreatedEntity(vals[2])
-		elseif HL2SaveSys_Players[vals[2]] then
-			ent = HL2SaveSys_Players[vals[2]]
+		local id = tonumber(vals[2])
+		
+		if (not tobool(vals[1])) then
+			ent = ents.GetMapCreatedEntity(id)
+			
+			if (not ent) then
+				ent = NULL
+			end
+		elseif HL2SaveSys_Players[id] then
+			ent = HL2SaveSys_Players[id]
 		else
 			ent = NULL
 		end
@@ -426,25 +454,6 @@ local HL2SaveSys_ReadTypeFuncs = {
 		
 		return tonumber(vals[1]), str
 	end,
-	["player"] = function(str)
-		local vals, str = HL2SaveSys.string.ReadValues(str, 2)
-		
-		if (vals[2] == -1) then return NULL, str end
-		
-		local ent
-		
-		if (not vals[1]) then
-			ent = ents.GetMapCreatedEntity(vals[2])
-		elseif HL2SaveSys_Players[vals[2]] then
-			ent = HL2SaveSys_Players[vals[2]]
-		else
-			ent = NULL
-		end
-		
-		if (not ent:IsValid()) then return NULL, str end
-		
-		return ent, str
-	end,
 	["string"] = function(str)
 		local vals, str = HL2SaveSys.string.ReadValues(str, 1)
 		
@@ -453,13 +462,14 @@ local HL2SaveSys_ReadTypeFuncs = {
 	["vector"] = function(str)
 		local vals, str = HL2SaveSys.string.ReadValues(str, 3)
 		
-		return Vector(vals[1], vals[2], vals[3]), str
+		return Vector(tonumber(vals[1]), tonumber(vals[2]), tonumber(vals[3])), str
 	end
 }
 
 HL2SaveSys_ReadTypeFuncs["player"] = HL2SaveSys_ReadTypeFuncs["entity"]
 HL2SaveSys_ReadTypeFuncs["nextbot"] = HL2SaveSys_ReadTypeFuncs["entity"]
 HL2SaveSys_ReadTypeFuncs["npc"] = HL2SaveSys_ReadTypeFuncs["entity"]
+HL2SaveSys_ReadTypeFuncs["weapon"] = HL2SaveSys_ReadTypeFuncs["entity"]
 
 HL2SaveSys.string.ReadAngle = HL2SaveSys_ReadTypeFuncs["angle"]
 HL2SaveSys.string.ReadBool = HL2SaveSys_ReadTypeFuncs["boolean"]
@@ -484,7 +494,7 @@ local function HL2SaveSys_WriteType_Old(str, value)
 	if (not HL2SaveSys_ValidTypes_Old[valType]) then
 		local errInfo = debug.getinfo(0, "S")
 		
-		error("[ERROR] " .. errInfo.short_src .. ": Attempted to write an invalid type.")
+		error("[ERROR] " .. errInfo.short_src .. ": Attempted to write invalid type \"" .. valType .. "\".")
 		
 		return
 	end
@@ -504,7 +514,7 @@ local function HL2SaveSys_ReadType_Old(str)
 	if (not HL2SaveSys_ValidTypes_Old[valType]) then
 		local errInfo = debug.getinfo(0, "S")
 		
-		error("[ERROR] " .. errInfo.short_src .. ": Attempted to read an invalid type.")
+		error("[ERROR] " .. errInfo.short_src .. ": Attempted to read invalid type \"" .. valType .. "\".")
 		
 		return
 	end
@@ -600,7 +610,7 @@ HL2SaveSys.string.WriteTable = function(str, tab, excludedTabs, tree)
 	return str
 end
 
-HL2SaveSys.string.ReadTable = function(str, excludedTabs, tree)
+HL2SaveSys.string.ReadTable = function(str, newTab, excludedTabs, tree)
 	if (not istable(excludedTabs)) then
 		excludedTabs = {}
 	end
@@ -609,7 +619,9 @@ HL2SaveSys.string.ReadTable = function(str, excludedTabs, tree)
 		tree = {}
 	end
 	
-	local newTab = {}
+	if (not istable(newTab)) then
+		newTab = {}
+	end
 	
 	local preTabCount, newStr = HL2SaveSys.string.ReadValues(str, 1)
 	str = newStr
@@ -634,7 +646,7 @@ HL2SaveSys.string.ReadTable = function(str, excludedTabs, tree)
 		
 		table.insert(tree, (#tree + 1), k)
 		
-		local newVal, newStr = HL2SaveSys.string.ReadTable(str, excludedTabs, tree)
+		local newVal, newStr = HL2SaveSys.string.ReadTable(str, newTab[k], excludedTabs, tree)
 		str = newStr
 		newTab[k] = newVal
 		
@@ -649,7 +661,7 @@ HL2SaveSys.string.ReadTable = function(str, excludedTabs, tree)
 		local k, newStr = HL2SaveSys_ReadType_Old(str)
 		str = newStr
 		
-		local preCount = HL2SaveSys.string.ReadValues(str, 1)
+		local preCount, newStr = HL2SaveSys.string.ReadValues(str, 1)
 		str = newStr
 		local count = tonumber(preCount[1])
 		
@@ -1291,13 +1303,13 @@ local function InitPostEntity()
 		for i = 1, tabCount do
 			local ent, newFileString = HL2SaveSys.string.ReadEntity(fileString)
 			fileString = newFileString
-			local entTable, newFileString = HL2SaveSys.string.ReadTable(fileString)
+			local entTable, newFileString = HL2SaveSys.string.ReadTable(fileString, ent:GetTable())
 			fileString = newFileString
 			local entNWVars, newFileString = HL2SaveSys.string.ReadTable(fileString)
 			fileString = newFileString
 			
 			if (ent:IsValid() or ent:IsWorld()) then
-				ent:SetTable(table.Merge(ent:GetTable(), entTable))
+				ent:SetTable(entTable)
 				
 				for k, v in pairs(entNWVars) do
 					HL2SaveSys.SetNWVar(ent, k, v)
